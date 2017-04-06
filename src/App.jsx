@@ -7,35 +7,19 @@ class App extends Component {
     super(props);
     this.state = {
       currentUser: {name: "Bob"},
-      messages: [
-        {
-          id: 1,
-          username: "Bob",
-          content: "Has anyone seen my marbles?",
-        },
-        {
-          id: 2,
-          username: "Anonymous",
-          content: "No, I think you lost them. You lost your marbles Bob. You lost them for good."
-        }
-      ]
+      messages: []
     }
   }
     handleKeyPress = (event) => {
       if(event.key === 'Enter'){
-        //console.log('enter press here!');
-        const newMessage = {id: this.state.messages.length +1, username: this.state.currentUser.name, content: event.target.value};
-        const messages = this.state.messages.concat(newMessage)
-        this.setState({messages: messages})
+        const newMessage = {username: this.state.currentUser.name, content: event.target.value};
+        //const messages = this.state.messages.concat(newMessage);
         this.socket.send(JSON.stringify(newMessage));
         event.target.value = '';
       }
     }
 
-
-
-
-  componentDidMount() {
+  componentDidMount = () => {
     this.socket = new WebSocket("ws://0.0.0.0:3001");
     this.socket.onopen = () => {
       console.log("is connected");
@@ -47,8 +31,11 @@ class App extends Component {
     console.log("componentDidMount <App />");
 
       this.socket.onmessage = (messageEvent) => {
+        //console.log("I'm here");
         console.log(messageEvent.data);
-
+        const newMessage = JSON.parse(messageEvent.data);
+        const messages = this.state.messages.concat(newMessage);
+        //this.socket.send(JSON.stringify(newMessage));
         this.setState({messages: messages})
       }
   }
