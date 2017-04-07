@@ -73,6 +73,13 @@ body {
   position: fixed;
   right: 0;
   top: 0;
+  opacity: 0.5;
+}
+
+.client-size {
+  line-height: 60px;
+
+  float: right;
 }
 
 .navbar-brand {

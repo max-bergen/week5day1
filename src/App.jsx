@@ -1,52 +1,81 @@
 import React, {Component} from 'react';
 import ChatBar from './ChatBar.jsx';
 import MessageList from './MessageList.jsx';
+import Nav from './Nav.jsx';
 
 class App extends Component {
   constructor(props){
     super(props);
     this.state = {
-      currentUser: {name: "Bob"},
+      currentUser: {name: 'Anonymous'},
       messages: []
     }
   }
-    handleKeyPress = (event) => {
+    updateMessageOnEnter = (event) => {
       if(event.key === 'Enter'){
-        const newMessage = {username: this.state.currentUser.name, content: event.target.value};
-        //const messages = this.state.messages.concat(newMessage);
+        const newMessage = {type: 'postMessage', username: this.state.currentUser.name, content: event.target.value};
         this.socket.send(JSON.stringify(newMessage));
         event.target.value = '';
       }
     }
 
-  componentDidMount = () => {
-    this.socket = new WebSocket("ws://0.0.0.0:3001");
-    this.socket.onopen = () => {
-      console.log("is connected");
-      //this.socket.send("hi");
+    onNameFieldBlur = (event) => {
+      let oldName = this.state.currentUser.name;
+      let newName = event.target.value;
+      let changedName = {
+          type: 'postNotification',
+          notification: oldName + ' is now ' + newName
+        }
+      if (newName === '') {
+        this.setState({currentUser: {name: Anonymous}});
+      } else if (oldName !== newName) {
 
+        this.setState({currentUser: {name: newName}});
+        this.socket.send(JSON.stringify(changedName));
+      }
 
     }
-    //socket.send("Connected to server");
-    console.log("componentDidMount <App />");
 
-      this.socket.onmessage = (messageEvent) => {
-        //console.log("I'm here");
-        console.log(messageEvent.data);
-        const newMessage = JSON.parse(messageEvent.data);
-        const messages = this.state.messages.concat(newMessage);
-        //this.socket.send(JSON.stringify(newMessage));
-        this.setState({messages: messages})
+  componentDidMount = () => {
+    console.log('componentDidMount <App />');
+    this.socket = new WebSocket('ws://0.0.0.0:3001');
+    this.socket.onopen = () => {
+      console.log('is connected');
+
+    }
+
+      this.socket.onmessage = (event) => {
+        console.log('event.data:', event.data);
+        const data = JSON.parse(event.data);
+        const messages = this.state.messages.concat(data);
+
+        switch(data.type) {
+      case 'incomingMessage':
+        const messages = this.state.messages.concat(data);
+        console.log('messages:', messages);
+        this.setState({messages: messages});
+        break;
+      case 'incomingNotification':
+        const notification = this.state.messages.concat(data);
+        this.setState({messages: notification});
+        break;
+      case 'incomingSize':
+        const size = data.size;
+        this.setState({client: size});
+        break;
+      default:
+        // show an error in the console if the message type is unknown
+        throw new Error('Unknown event type ' + data.type);
+    }
       }
   }
-
-
-
+//console.log('this.state.messages:', {this.state.messages});
   render(){
     return (
       <div>
+        <Nav size={this.state.client}/>
         <MessageList messages={this.state.messages}/>
-        <ChatBar currentName={this.state.currentUser.name} keyPress={this.handleKeyPress}/>
+        <ChatBar currentName={this.state.currentUser.name} updateMessageOnEnter={this.updateMessageOnEnter} onNameFieldBlur={this.onNameFieldBlur}/>
       </div>
     );
   }

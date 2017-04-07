@@ -6,9 +6,12 @@ class Message extends React.Component {
   }
   render() {
     return (
-      <div className="message" >
+      <div>
+      <div className="message">
         <span className="message-username">{this.props.message.username}</span>
         <span className="message-content">{this.props.message.content}</span>
+      </div>
+      <div className="message system">{this.props.message.notification}</div>
       </div>
     );
   }
